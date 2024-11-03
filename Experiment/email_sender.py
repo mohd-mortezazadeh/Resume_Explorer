@@ -1,4 +1,18 @@
-<!DOCTYPE html>
+
+from email import encoders
+import smtplib
+import ssl
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+
+
+smtp_server = "smtp.gmail.com"
+port = 587  # For starttls
+sender_email = "siyamak1981@gmail.com"
+
+html = """\
+  <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -93,3 +107,50 @@
     </div>
 </body>
 </html>
+
+    """
+password = input("what is your password of your email? ")
+
+
+context = ssl.create_default_context()
+with open("Emails/ExtractEmailNezamMohandesiKerman.txt", 'r') as f:
+    emlist = f.readlines()
+try:
+    server = smtplib.SMTP(smtp_server, port)
+    server.ehlo()  # Can be omitted
+    server.starttls(context=context)  # Secure the connection
+    server.ehlo()  # Can be omitted
+    server.login(sender_email, password)
+
+    for email in emlist:
+        receiver_email = email
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "Data Sciense "
+        message["From"] = sender_email
+        message["To"] = receiver_email
+        print(message["To"])
+        message["Bcc"] = receiver_email
+        message.attach(MIMEText(html, "html"))
+
+        filename="resume.pdf"
+        with open(filename, "rb") as attachment:
+            part = MIMEBase("application", "octet-stream")
+            part.set_payload(attachment.read())
+
+        encoders.encode_base64(part)
+        part.add_header(
+            "Content-Disposition",
+            f"attachment; filename= {filename}",
+        )
+
+        message.attach(part)
+        text = message.as_string()
+        part1 = MIMEText(text, "plain")
+        message.attach(part1)
+
+        server.sendmail(sender_email, receiver_email, message.as_string())
+except Exception as e:
+    print(e)
+finally:
+    print("whole of them is done good luck!")
+    server.quit()

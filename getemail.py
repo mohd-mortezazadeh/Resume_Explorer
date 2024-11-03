@@ -1,5 +1,4 @@
 import time
-import eventlet
 import requests
 from threading import current_thread
 from concurrent.futures import ThreadPoolExecutor
@@ -8,68 +7,86 @@ from extract_emails import EmailExtractor
 from extract_emails.browsers import RequestsBrowser
 import logging
 
-# تنظیمات برای لاگ info
-logging.basicConfig(filename='info.log', filemode='a', format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%d-%b-%Y %H:%M:%S', level=logging.INFO)
+# Logging configuration
+logging.basicConfig(
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%d-%b-%Y %H:%M:%S',
+    level=logging.INFO
+)
 logger_info = logging.getLogger('info')
-
-# تنظیمات برای لاگ error
-logging.basicConfig(filename='error.log', filemode='a', format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%d-%b-%Y %H:%M:%S', level=logging.ERROR)
 logger_error = logging.getLogger('error')
 
-exmaili = []
-should_stop = False  # این متغیر نشان می‌دهد که آیا برنامه باید متوقف شود یا نه
+extracted_emails = []
+should_stop = False
 
-start = time.perf_counter()
+def fetch_emails_from_url(url):
+    """Fetch emails from a given URL."""
+    global extracted_emails
+
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 5_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9B179 Safari/7534.48.3'}
+        response = requests.get(url, headers=headers, timeout=2)
+
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, "html.parser")
+            links = soup.find_all("a")
+
+            for link in links:
+                href = link.get("href")
+                if href:
+                    extract_emails_from_link(href)
+
+    except requests.exceptions.RequestException as req_err:
+        logger_error.error(f"Request error: {req_err} - {current_thread().name}")
+    except Exception as err:
+        logger_error.error(f"General error: {err} - {current_thread().name}")
+
+def extract_emails_from_link(link):
+    """Extract emails from a given link."""
+    global extracted_emails
+
+    with RequestsBrowser() as browser:
+        email_extractor = EmailExtractor(link, browser, depth=2)
+        emails = email_extractor.get_emails()
+
+        for email in emails:
+            email_address = email.as_dict()["email"]
+            if email_address not in extracted_emails:
+                extracted_emails.append(email_address)
+                save_email(email_address)
+
+def save_email(email_address):
+    """Save the extracted email to a file."""
+    with open('Emails/SaveEmail.txt', 'a') as email_file:
+        email_file.write(email_address + '\n')
+    print(f"{email_address} - {current_thread().name}")
+    logger_info.info(f"{email_address} - {current_thread().name}")
 
 def foo(name):
-    global should_stop  # اعلام می‌کند که از متغیر سراسری استفاده می‌شود
-    data = {'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 5_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9B179 Safari/7534.48.3'}
-    
-    with open('Urls/ExtractUrlNezamMohandesiKerman.txt', 'r') as f:
-        lines = f.readlines()
+    """Main function to process URLs and extract emails."""
+    global should_stop
 
-    for l in lines:
-        with eventlet.Timeout(2):
-            try:
-                if should_stop:  # بررسی می‌کند آیا برنامه باید متوقف شود یا نه
-                    break  # خروج از حلقه اگر برنامه باید متوقف شود
-                
-                r = requests.get(l.strip(), headers=data, timeout=2)
-                if r.status_code == 200:
-                    soup = BeautifulSoup(r.content, "html.parser")
-                    ltags = soup.find_all("a")
-                    try:
-                        for tag in ltags:
-                            lhref = tag.get("href")
-                            with RequestsBrowser() as browser:
-                                email_extractor = EmailExtractor(lhref, browser, depth=2)
-                                emails = email_extractor.get_emails()
-                                for email in emails:
-                                    exmai = email.as_dict()["email"]
-                                    if exmai not in exmaili:
-                                        exmaili.append(exmai)
-                                        with open('Emails/ExtractEmailNezamMohandesiKerman.txt', 'a') as emailwrite:
-                                            emailwrite.writelines(email.as_dict().get('email') + '\n')
-                                    print(f"{exmai} - {current_thread().name}")
-                                    logger_info.info(f"{exmai} - {current_thread().name}")
-                             
-                    except Exception as err:
-                        print(err)
-                        logger_error(f"{err} - {current_thread().name}")
-            except:
-                pass
+    with open('Urls/saveurl.txt', 'r') as file:
+        urls = file.readlines()
 
-# تابعی برای متوقف کردن برنامه
+    for url in urls:
+        if should_stop:
+            break
+        fetch_emails_from_url(url.strip())
+
 def stop_program():
+    """Stop the email extraction process."""
     global should_stop
     should_stop = True
 
-with ThreadPoolExecutor() as executor:
-    names = ["one", "two", "three", "four", 'five', 'six', 'seven', 'eight','eight']
-    executor.map(foo, names)
+if __name__ == "__main__":
+    start_time = time.perf_counter()
 
-# فراخوانی تابع برای متوقف کردن برنامه
-stop_program()
+    with ThreadPoolExecutor() as executor:
+        thread_names = ["one", "two", "three", "four", 'five', 'six', 'seven', 'eight', 'nine']
+        executor.map(foo, thread_names)
 
-end = time.perf_counter()
-print("نتیجه زمان:", end - start, current_thread().name)
+    stop_program()
+
+    end_time = time.perf_counter()
+    print("Execution time:", end_time - start_time, current_thread().name)

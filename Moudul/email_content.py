@@ -1,4 +1,7 @@
-<!DOCTYPE html>
+# email_content.py
+
+html_content = """\
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -93,3 +96,6 @@
     </div>
 </body>
 </html>
+"""
+
+attachment_path = "./DataScientist-CV.pdf"
