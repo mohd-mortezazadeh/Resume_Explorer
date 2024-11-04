@@ -1,15 +1,16 @@
 # main.py
 
 import asyncio
-import time
 import random
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from conf_log import setup_logging
 from driver_setup import setup_driver
 from link_extractor import process_links, validate_links, save_links
 
-def main():
+
+async def main():
     driver = setup_driver()
     driver.get("https://www.google.com")
 
@@ -35,18 +36,18 @@ def main():
             
             # Scroll to the bottom to make sure all elements are loaded
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(2)  # Wait for potential new elements to load
+            await asyncio.sleep(2)  # Wait for potential new elements to load
 
             # Extract and validate links
             current_links = process_links(driver)
-            valid_links = asyncio.run(validate_links(current_links))
+            valid_links = await validate_links(current_links)
             links.update(valid_links)
 
             # Save links to file
-            save_links(links)
+            await save_links(links)  # Make sure to await this
 
             # Add a small random delay
-            time.sleep(random.uniform(1, 3))
+            await asyncio.sleep(random.uniform(1, 3))
 
             # Try to go to the next page
             try:
@@ -57,7 +58,7 @@ def main():
                 element.click()
                 
                 # Add another random delay after clicking "Next"
-                time.sleep(random.uniform(1, 3))
+                await asyncio.sleep(random.uniform(1, 3))
                 
                 page_num += 1  # Increment page number
 
@@ -74,4 +75,6 @@ def main():
         driver.quit()  # Close the browser after finishing
 
 if __name__ == "__main__":
-    main()
+    setup_logging()
+    
+    asyncio.run(main())  # Use asyncio.run to execute the main coroutine

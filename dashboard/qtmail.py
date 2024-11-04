@@ -1,7 +1,7 @@
 import sys
 from PyQt6 import QtWidgets, uic
 from PyQt6.QtWidgets import QMessageBox
-from link_extractor import fetch_links  # فرض بر این است که این تابع را در ماژول link_extractor ایجاد کرده‌اید.
+from link_extractor import  process_links  # فرض بر این است که این تابع را در ماژول link_extractor ایجاد کرده‌اید.
 from email_extractor import fetch_emails  # فرض بر این است که این تابع را در ماژول email_extractor ایجاد کرده‌اید.
 from email_sender import send_email  # فرض بر این است که این تابع را در ماژول email_sender ایجاد کرده‌اید.
 
@@ -15,7 +15,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def extract_links(self):
         query = self.search_input.text()
-        links = process_links(query)  # به فرض وجود تابع fetch_links
+        links = process_links(query)  
         self.links_output.setPlainText('\n'.join(links))
         QMessageBox.information(self, "Links Extracted", f"Found {len(links)} links.")
 

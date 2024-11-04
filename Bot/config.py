@@ -26,4 +26,4 @@ EXCLUDE_LINKS_START = [
 
 CHROMEDRIVER_PATH = "./chromedriver"
 HEADLESS_MODE = True
-SAVE_FILE_PATH = "saveurls.txt"
+SAVE_FILE_PATH = input("what is your file name?\n")

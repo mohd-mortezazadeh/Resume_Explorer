@@ -1,3 +1,4 @@
+aiofiles==24.1.0
 aiohappyeyeballs==2.4.3
 aiohttp==3.10.10
 aiosignal==1.3.1
@@ -7,6 +8,7 @@ beautifulsoup4==4.12.3
 certifi==2024.8.30
 charset-normalizer==3.4.0
 click==8.1.7
+diskcache==5.6.3
 extract-emails==4.0.1
 frozenlist==1.5.0
 h11==0.14.0

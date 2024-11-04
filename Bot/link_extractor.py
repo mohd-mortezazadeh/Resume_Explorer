@@ -2,19 +2,31 @@
 
 import asyncio
 import aiohttp
+import aiofiles
 from selenium.webdriver.common.by import By
 from config import EXCLUDE_LINKS_START, SAVE_FILE_PATH
 
+# دیکشنری کش برای ذخیره نتایج اعتبارسنجی
+cache = {}
+
 async def is_valid_url(session, url):
-    """Check if the URL returns a valid response."""
+    """Check if the URL returns a valid response, using cache if available."""
+    # اگر نتیجه در کش موجود باشد، از آن استفاده کنید
+    if url in cache:
+        return cache[url]
+    
     try:
         async with session.head(url, allow_redirects=True) as response:
-            return response.status < 400
+            valid = response.status < 400
+            # ذخیره نتیجه در کش
+            cache[url] = valid
+            return valid
     except Exception:
+        cache[url] = False  # در صورت بروز خطا، نتیجه را در کش ذخیره کنید
         return False
 
 async def validate_links(urls):
-    """Validate multiple URLs concurrently."""
+    """Validate multiple URLs concurrently, using caching."""
     async with aiohttp.ClientSession() as session:
         tasks = [is_valid_url(session, url) for url in urls]
         results = await asyncio.gather(*tasks)
@@ -29,7 +41,10 @@ def process_links(driver):
             current_links.append(href)
     return current_links
 
-def save_links(links):
-    """Save the extracted links to a file."""
-    with open(SAVE_FILE_PATH, "w") as w:
-        w.write('\n'.join(links))
+async def save_links(links):
+    """Save the extracted links to a file asynchronously."""
+    try:
+        async with aiofiles.open(SAVE_FILE_PATH, "w") as w:
+            await w.write('\n'.join(links))
+    except Exception as e:
+        print(f"Error saving links: {e}")
