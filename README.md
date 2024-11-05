@@ -20,7 +20,7 @@ To use this project, you need the following:
   - `ssl`
   - `email`
   
-You can install these libraries using pip:
+
 
 ## Project Structure
 Email_Handler/
@@ -38,6 +38,8 @@ git clone https://github.com/pydevcasts/Email_Handler.git
 cd Email_Handler
 python -m venv venv
 source ./venv /bin/activate
+#You can install the libraries using pip:
+pip install -r ./requirements.txt
 cd Bot
 python run_main.py
 python run_getmail.py
