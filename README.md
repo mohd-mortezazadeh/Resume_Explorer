@@ -23,9 +23,22 @@ To use this project, you need the following:
 You can install these libraries using pip:
 
 ```bash
+git clone https://github.com/pydevcasts/Email_Handler.git
+cd Email_Handler
 python -m venv venv
 source ./venv /bin/activate
 cd Bot
 python run_main.py
 python run_getmail.py
 python run_sender.py
+
+## Project Structure
+Email_Handler/
+└── ‌Bot  
+        ├── email_sender.py        # Main file for sending emails
+        ├── utils.py               # Helper functions for managing emails
+        ├── email_content.py       # Content and settings for emails
+        ├── run_main.py            # Entry point of the program
+        ├── run_sender.py          # Script for sending emails
+        └── run_getmail.py         # Script for retrieving emails
+  
