@@ -12,7 +12,7 @@ from conf_log import setup_logging
 
 extracted_emails = []
 should_stop = False
-filename = input("Enter the filename containing links (e.g., dubai.txt): ")
+
 
 def process_urls(urls, session, url_cache):
     """Process URLs to extract emails with optimization."""
@@ -23,7 +23,7 @@ def process_urls(urls, session, url_cache):
             break
         fetch_emails_from_url(url.strip(), extracted_emails, session, url_cache)
 
-def main():
+def main(filename):
     start_time = time.perf_counter()
 
     with ThreadPoolExecutor(max_workers=4) as executor:  # Define thread pool size
@@ -43,8 +43,10 @@ def main():
     end_time = time.perf_counter()
     logger_info.info(f"Execution time: {end_time - start_time:.2f} seconds")
 
+
 if __name__ == "__main__":
     setup_logging()
+    filename=input("Enter the filename containing URLs (e.g., urls.txt):")
     logger_info = logging.getLogger('info')
     logger_info.info("This is an info message.")
-    main()
+    main(filename)

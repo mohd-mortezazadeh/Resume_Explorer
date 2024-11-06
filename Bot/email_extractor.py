@@ -13,7 +13,7 @@ filename = input("Enter the filename to save (e.g., myfile.txt): ")
 def extract_emails_from_link(link, extracted_emails):
     """Extract emails from a given link."""
     with RequestsBrowser() as browser:
-        email_extractor = EmailExtractor(link, browser, depth=2)
+        email_extractor = EmailExtractor(link, browser, depth=1)
         emails = email_extractor.get_emails()
 
         for email in emails:

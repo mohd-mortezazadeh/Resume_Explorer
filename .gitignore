@@ -279,3 +279,14 @@ chromedriver
 ./pdf
 ./pdf/
 .pdf/
+.log
+log
+./log
+./log/
+/log/
+*.txt
+*./txt
+*.log
+*./log
+/txt/
+./txt

@@ -4,7 +4,7 @@ import asyncio
 import aiohttp
 import aiofiles
 from selenium.webdriver.common.by import By
-from config import EXCLUDE_LINKS_START, SAVE_FILE_PATH
+from config import EXCLUDE_LINKS_START
 
 # دیکشنری کش برای ذخیره نتایج اعتبارسنجی
 cache = {}
@@ -41,10 +41,15 @@ def process_links(driver):
             current_links.append(href)
     return current_links
 
-async def save_links(links):
+
+async def save_links(links, file_name):
     """Save the extracted links to a file asynchronously."""
     try:
-        async with aiofiles.open(SAVE_FILE_PATH, "w") as w:
+        if file_name:  # Check if the user clicked OK and provided a filename
+                file_name = file_name.strip()  # Strip any whitespace
+                if not file_name.endswith('.txt'):  # Ensure the file has a .txt extension
+                    file_name += '.txt'
+        async with aiofiles.open(file_name, "w") as w:
             await w.write('\n'.join(links))
     except Exception as e:
         print(f"Error saving links: {e}")
