@@ -279,6 +279,8 @@ chromedriver
 ./pdf
 ./pdf/
 .pdf/
+*.pdf
+*./pdf
 .log
 log
 ./log

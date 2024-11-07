@@ -98,4 +98,4 @@ html_content = """\
 </html>
 """
 
-attachment_path = "./DataScientist-CV.pdf"
+# attachment_path = "./DataScientist-CV.pdf"
