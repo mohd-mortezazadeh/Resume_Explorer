@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 
 [project]
-name = "example_package_YOUR_USERNAME_HERE"
+name = "ResumeRover"
 version = "0.0.1"
 authors = [
   { name="Siyamak", email="pydevcasts@gmail.com" },

@@ -31,14 +31,13 @@ python -m venv venv
 source ./venv /bin/activate
 #You can install the libraries using pip:
 pip install -r ./requirements.txt
-cd Bot
-python run_main.py
-python run_getmail.py
-python run_sender.py
+cd src
+python main.py
+
 
 ## Project Structure
 ResumeRover/
-└── ‌Bot  
+└── src  
         ├── email_sender.py        # Main file for sending emails
         ├── utils.py               # Helper functions for managing emails
         ├── email_content.py       # Content and settings for emails
