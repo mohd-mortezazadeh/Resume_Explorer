@@ -7,7 +7,7 @@ setup(
     install_requires=[
         'PyQt6',
         'beautifulsoup4',
-        'extract-emails'
+        'extract-emails',
         'requests',
     ],
     entry_points={
