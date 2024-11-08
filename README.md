@@ -1,4 +1,4 @@
-# Email Handler
+# ResumeRover
 
 Email Handler is a simple and efficient tool for managing and sending emails using Python. This project allows you to automate the sending of emails and easily work with a list of email addresses.
 
