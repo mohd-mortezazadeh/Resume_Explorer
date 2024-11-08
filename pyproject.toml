@@ -1,3 +1,23 @@
 [build-system]  
 requires = ["setuptools", "wheel"]  
 build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "example_package_YOUR_USERNAME_HERE"
+version = "0.0.1"
+authors = [
+  { name="Siyamak", email="pydevcasts@gmail.com" },
+]
+description = "Email Handler is a simple and efficient tool for managing and sending emails using Python. This project allows you to automate the sending of emails and easily work with a list of email addresses."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/pydevcasts/ResumeRover"
+Issues = "https://github.com/pydevcasts/ResumeRover/issues"
