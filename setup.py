@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='email_handler',  # Package name in lowercase
+    name='ResumeRover',  # Package name in lowercase
     version='1.0.0',
     packages=find_packages(where='.'),  # Automatically find packages
     install_requires=[

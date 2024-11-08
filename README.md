@@ -25,8 +25,8 @@ To use this project, you need the following:
   
 
 ```bash
-git clone https://github.com/pydevcasts/Email_Handler.git
-cd Email_Handler
+git clone https://github.com/pydevcasts/ResumeRover.git
+cd ResumeRover
 python -m venv venv
 source ./venv /bin/activate
 #You can install the libraries using pip:
@@ -37,7 +37,7 @@ python run_getmail.py
 python run_sender.py
 
 ## Project Structure
-Email_Handler/
+ResumeRover/
 └── ‌Bot  
         ├── email_sender.py        # Main file for sending emails
         ├── utils.py               # Helper functions for managing emails
