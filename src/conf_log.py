@@ -9,7 +9,7 @@ def setup_logging(log_file=None):
 
     # If no log_file is provided, create a dynamic log file name based on current date and time
     if log_file is None:
-        log_file = f'src/Log/app_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
+        log_file = f'Log/app_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
 
     # Create handlers
     console_handler = logging.StreamHandler()  # Log to console

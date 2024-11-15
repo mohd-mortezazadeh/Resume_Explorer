@@ -1,7 +1,16 @@
-# email_content.py
+from email import encoders
+import smtplib
+import ssl
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
 
-html_content = """\
- <!DOCTYPE html>
+smtp_server = "smtp.gmail.com"
+port = 587  
+sender_email = "smartpydev@gmail.com"
+
+html = """\
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -70,7 +79,7 @@ html_content = """\
 </head>
 <body>
     <div class="container">
-       
+        <img src="https://schoolofinternetmarketing.co.in/wp-content/uploads/2019/02/383x2621-1-min.jpg" alt="Profile Image" class="profile-image"> <!-- Replace with your image URL -->
         <h1>Hello!</h1>
         
         <p>I hope this message finds you well. My name is <strong>Siyamak Abasnezhad Torki</strong>, and I am a passionate Data Scientist and Full Stack Developer with over a decade of experience in software development.</p>
@@ -84,9 +93,10 @@ html_content = """\
         <h3>Best Regards,<br>Siyamak Abasnezhad Torki</h3>
         
         <div class="contact-info">
-            <p>Email:pydevcasts@gmail.com</p>
+            <p>Email: <a href="mailto:pydevcasts@gmail.com">pydevcasts@gmail.com</a></p>
             <p>Phone: (+98) 930 494 3348</p>
-    
+            <p>GitHub: <a href="https://github.com/pydevcasts">github.com/pydevcasts</a></p>
+            <p>LinkedIn: <a href="https://www.linkedin.com/in/pydevcasts/">linkedin.com/in/pydevcasts</a></p>
         </div>
     </div>
     
@@ -97,4 +107,46 @@ html_content = """\
 </html>
 """
 
-# attachment_path = "./DataScientist-CV.pdf"
+password = "xwoi pser kfan txrv"
+
+server = None  # Initialize server variable
+context = ssl.create_default_context()
+
+try:
+    with open("email.txt", 'r') as f:
+        emlist = [email.strip() for email in f.readlines()]  # Strip whitespace/newlines
+
+    server = smtplib.SMTP(smtp_server, port)
+    server.ehlo()  # Can be omitted
+    server.starttls(context=context)  # Secure the connection
+    server.ehlo()  # Can be omitted
+    server.login(sender_email, password)
+
+    for email in emlist:
+        if not email:  # Skip empty lines
+            continue
+        receiver_email = email
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "Data Scientist | Full Stack Developer"
+        message["From"] = sender_email
+        message["To"] = receiver_email  # This can be omitted if using BCC
+        message["Bcc"] = receiver_email 
+        message.attach(MIMEText(html, "html"))
+
+        filename = "DataScientist-CV.pdf"
+        with open(filename, "rb") as attachment:
+            part = MIMEBase("application", "octet-stream")
+            part.set_payload(attachment.read())
+            encoders.encode_base64(part)
+            part.add_header("Content-Disposition", f"attachment; filename= {filename}")
+            message.attach(part)
+
+        text = message.as_string()
+        server.sendmail(sender_email, receiver_email, text)
+
+except Exception as e:
+    print(f"An error occurred: {e}")
+finally:
+    if server:
+        server.quit()
+    print("All emails processed. Good luck!")

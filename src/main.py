@@ -22,15 +22,17 @@ from email_sender import send_email
 from email_content import html_content
 from utils import read_email_list
 from email_extractor import extracted_emails
-from PyQt6.QtCore import QThread
+from PyQt6.QtCore import QThread, pyqtSignal, QObject
+
 
 
 
 
 class EmailAutomationApp(QMainWindow):
+    log_signal = pyqtSignal(str)  
     def __init__(self):
         super().__init__()
-
+        self.log_signal.connect(self.update_log_output)  # اتصال سیگنال به متد
         self.setWindowTitle("Email Automation Tool")
         self.setGeometry(100, 100, 800, 600)
 
@@ -42,7 +44,11 @@ class EmailAutomationApp(QMainWindow):
         self.create_link_extractor_tab()
         self.create_email_extractor_tab()  # New tab for extracting emails from URLs
         self.create_email_sender_tab()
-        # =======================end tab===============================
+    #============================signals=======================
+    def update_log_output(self, message):
+        self.log_output.append(message)  # به روز رسانی لاگ در ترد اصلی
+    # ==========================================================
+    # =======================end tab===============================
     # ================== start tab ==================
     def create_link_extractor_tab(self):
         """Tab for extracting links from search results"""
@@ -335,6 +341,7 @@ class EmailAutomationApp(QMainWindow):
                 QMessageBox.critical(self, "Error", f"An error occurred while saving the file: {e}")
     # ===========================end  extract email ==================
     # ======================== start email sending======================
+
     def browse_file(self):
         """Open a file dialog to select a file."""
         file_name, _ = QFileDialog.getOpenFileName(self, "Select File", "", "All Files (*)")
@@ -346,10 +353,12 @@ class EmailAutomationApp(QMainWindow):
         sender_email = self.sender_email_input.text()
         password = self.password_input.text()
         email_file = self.email_file_input.text()
-        attachment_path = self.attachment_input.text()  # گرفتن مسیر فایل از QLineEdit
-
-        if sender_email and password and email_file and attachment_path:
-            threading.Thread(target=self.send_emails, args=(sender_email, password, email_file, attachment_path), daemon=True).start()
+        attachment_path = self.attachment_input.text()  # Get the file path from QLineEdit
+        attachment_path if attachment_path else None
+        if sender_email and password and email_file:
+       
+            attachment_path = attachment_path if attachment_path else None
+            threading.Thread(target=self.send_emails, args=(sender_email, password, email_file, attachment_path), daemon=False).start()
         else:
             QMessageBox.warning(self, "Input Error", "Please fill in all fields.")
             
@@ -358,27 +367,38 @@ class EmailAutomationApp(QMainWindow):
         """Function to send emails to extracted email addresses with attachment"""
         asyncio.run(self.send_emails_async(sender_email, password, email_file, attachment_path))
         
-
     async def send_emails_async(self, sender_email, password, email_file, attachment_path):
         """Asynchronous email sending with attachment"""
         try:
             email_list = await read_email_list(email_file)
-          
-            tasks = []
             for receiver_email in email_list:
-                tasks.append(send_email(
-                    receiver_email=receiver_email,
-                    html_content=html_content,
-                    sender_email=sender_email,
-                    password=password,
-                    attachment_path=attachment_path  # استفاده از مسیر جدید
-                ))
-            await asyncio.gather(*tasks)  # Send emails concurrently
+                await self.send_email_with_retry(receiver_email, sender_email, password, attachment_path)
+                await asyncio.sleep(10)  # Delay of 10 seconds between each email to avoid rate limits
+                
             self.log_output.append("Emails sent successfully!")
             QMessageBox.information(self, "Success", "Emails sent successfully!")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"An error occurred while sending emails: {e}")
 
+    async def send_email_with_retry(self, receiver_email, sender_email, password, attachment_path=None, retries=3, delay=5):
+        """Send email with retry mechanism"""
+        for attempt in range(retries):
+            try:
+                await send_email(
+                    receiver_email=receiver_email,
+                    html_content=html_content,
+                    sender_email=sender_email,
+                    password=password,
+                    attachment_path=attachment_path
+                )
+                self.log_signal.emit(f"Email sent successfully to {receiver_email}!")  
+                break  # If successful, exit the retry loop
+            except Exception as e:
+                self.log_signal.emit(f"Failed to send email to {receiver_email}: {e}")
+                if attempt < retries - 1:
+                    await asyncio.sleep(delay)  # Wait before retrying
+                else:
+                    self.log_signal.emit(f"Giving up on sending email to {receiver_email} after {retries} attempts.")  # استفاده از سیگنال
     # ======================== end email sending =====================
 
 

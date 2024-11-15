@@ -26,7 +26,7 @@ async def send_email(receiver_email, html_content, sender_email, password, subje
                 part = MIMEBase("application", "octet-stream")
                 part.set_payload(attachment.read())
             encoders.encode_base64(part)
-            part.add_header("Content-Disposition", f"attachment; filename= {attachment_path}")
+            part.add_header("Content-Disposition", f"attachment; filename= {attachment_path.split('/')[-1]}")
             message.attach(part)
         except Exception as e:
             logger_info.error(f"Error attaching file {attachment_path}: {e}")
