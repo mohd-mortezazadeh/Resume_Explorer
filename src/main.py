@@ -375,7 +375,7 @@ class EmailAutomationApp(QMainWindow):
                 await self.send_email_with_retry(receiver_email, sender_email, password, attachment_path)
                 await asyncio.sleep(10)  # Delay of 10 seconds between each email to avoid rate limits
                 
-            self.log_output.append("Emails sent successfully!")
+            self.log_signal.emit("Emails sent successfully!")
             QMessageBox.information(self, "Success", "Emails sent successfully!")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"An error occurred while sending emails: {e}")
