@@ -21,6 +21,7 @@ To use this project, you need the following:
   - `email`
   
 
+![Screenshot from 2024-11-17 01-34-47](https://github.com/user-attachments/assets/1d72cd98-9b07-4f7d-9783-deed955af286)
 
   
 
