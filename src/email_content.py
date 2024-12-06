@@ -70,23 +70,23 @@ html_content = """\
 </head>
 <body>
     <div class="container">
-       
-        <h1>Hello!</h1>
-        
+     <h1>Hello!</h1>
+
         <p>I hope this message finds you well. My name is <strong>Siyamak Abasnezhad Torki</strong>, and I am a passionate Data Scientist and Full Stack Developer with over a decade of experience in software development.</p>
 
-        <p>Throughout my career, I have developed a range of applications and solutions that leverage cutting-edge technologies to solve complex problems. My expertise spans <strong>Python, Django, Vue, TypeScript</strong> and various data science libraries, which I have used to create impactful projects such as IoT systems and AI-driven applications.</p>
+        <p>Throughout my career, I have developed a range of applications and solutions that leverage cutting-edge technologies to solve complex problems. My expertise spans <strong>Python, Django, Vue, TypeScript</strong>, and various data science libraries. I have successfully created impactful projects, including IoT systems and AI-driven applications.</p>
 
-        <p>I am always eager to connect with like-minded professionals and explore new opportunities for collaboration. If you are interested in discussing potential projects or sharing insights, I would love to hear from you!</p>
+        <p>I am currently seeking new opportunities to apply my skills and collaborate with innovative teams. If your company is looking for a dedicated professional who can contribute to exciting projects, I would love to discuss how I can add value to your team.</p>
 
-        <p>Thank you for your time, and I look forward to the possibility of working together.</p>
+        <p>Please feel free to reach out if you would like to explore potential collaborations or if you have any questions. I am eager to connect with like-minded professionals and share insights.</p>
+
+        <p>Thank you for considering my application. I look forward to the possibility of working together!</p>
 
         <h3>Best Regards,<br>Siyamak Abasnezhad Torki</h3>
-        
+
         <div class="contact-info">
-            <p>Email:pydevcasts@gmail.com</p>
+            <p>Email: <a href="mailto:pydevcasts@gmail.com">pydevcasts@gmail.com</a></p>
             <p>Phone: (+98) 930 494 3348</p>
-    
         </div>
     </div>
     

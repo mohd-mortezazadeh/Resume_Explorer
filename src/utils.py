@@ -17,7 +17,7 @@ logger_info = logging.getLogger(__name__)
 def save_email(email_address, file_name):
     """Save the extracted email to a file."""
     try:
-        with open(file_name, 'a') as email_file:
+        with open('swadenmail.txt', 'a') as email_file:
             email_file.write(email_address + '\n')
         logger_info.info(f"Saved email: {email_address}")
     except Exception as e:

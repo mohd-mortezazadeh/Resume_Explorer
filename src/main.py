@@ -24,7 +24,7 @@ from utils import read_email_list
 from email_extractor import extracted_emails
 from PyQt6.QtCore import QThread, pyqtSignal, QObject
 
-
+from threading import Lock
 
 
 
@@ -32,6 +32,7 @@ class EmailAutomationApp(QMainWindow):
     log_signal = pyqtSignal(str)  
     def __init__(self):
         super().__init__()
+        self.lock = Lock()
         self.log_signal.connect(self.update_log_output)  # اتصال سیگنال به متد
         self.setWindowTitle("Email Automation Tool")
         self.setGeometry(100, 100, 800, 600)
@@ -76,10 +77,10 @@ class EmailAutomationApp(QMainWindow):
         layout.addWidget(self.links_result)
 
         # Save links button
-        self.save_links_button = QPushButton("Save Links")
-        self.save_links_button.setStyleSheet("background-color: #4CAF50; color: white; font-weight: bold; padding: 10px;margin-bottom:10px")
-        self.save_links_button.clicked.connect(self.save_links_to_file)
-        layout.addWidget(self.save_links_button)
+        # self.save_links_button = QPushButton("Save Links")
+        # self.save_links_button.setStyleSheet("background-color: #4CAF50; color: white; font-weight: bold; padding: 10px;margin-bottom:10px")
+        # self.save_links_button.clicked.connect(self.save_links_to_file)
+        # layout.addWidget(self.save_links_button)
 
         tab.setLayout(layout)
         self.tabs.addTab(tab, "Link Extractor")
@@ -183,12 +184,15 @@ class EmailAutomationApp(QMainWindow):
         self.tabs.addTab(tab, "Email Sender")
     # ======================== end tab =======================
     # =========================start link extract =====================
+
+
+
     def start_link_extraction(self):
         """Start the link extraction process in a separate thread"""
         search_query = self.search_input.text()
         if search_query:
             self.links_result.setPlainText(f"Extracting links for query: {search_query}...")
-            threading.Thread(target=self.extract_links, args=(search_query,), daemon=True).start()
+            threading.Thread(target=self.extract_links, args=(search_query,), daemon=False).start()
         else:
             QMessageBox.warning(self, "Input Error", "Please enter a search query.")
 
@@ -201,8 +205,21 @@ class EmailAutomationApp(QMainWindow):
         driver = setup_driver()
         driver.get("https://www.google.com")
 
+        # Ask for the filename to save links at the beginning
+        file_name, ok = QInputDialog.getText(self, "Input Dialog", "Enter the filename to save (e.g., myfile.txt):")
+        if not ok or not file_name.strip():
+            QMessageBox.warning(self, "Input Error", "Please enter a valid filename.")
+            driver.quit()
+            return
+
+        file_name = file_name.strip()
+        if not file_name.endswith('.txt'):
+            file_name += '.txt'
+
+        with open(file_name, "w") as file:
+            file.write("")  # Clear the file if it exists
+
         try:
-            # Wait until the search input element is visible and clickable
             input_element = WebDriverWait(driver, 10).until(
                 EC.visibility_of_element_located((By.NAME, "q"))
             )
@@ -213,68 +230,64 @@ class EmailAutomationApp(QMainWindow):
             page_num = 1   # Track page number
 
             while True:
-                print(f"Processing page {page_num}...")  # Log current page number
-                
-                # Scroll to the bottom to make sure all elements are loaded
+                self.log_signal.emit(f"Processing page {page_num}...")  # Emit log for current page
                 driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                 await asyncio.sleep(2)  # Wait for potential new elements to load
 
-                # Extract and validate links
                 current_links = process_links(driver)
                 valid_links = await validate_links(current_links)
                 links.update(valid_links)
 
-                # Add a small random delay
+                with open(file_name, "a") as file:
+                    for link in valid_links:
+                        file.write(link + "\n")
+
+                self.log_signal.emit(f"Found links: {valid_links}")  # Emit found links
+
                 await asyncio.sleep(random.uniform(1, 3))
 
-                # Try to go to the next page
                 try:
                     element = WebDriverWait(driver, 20).until(
                         EC.element_to_be_clickable((By.ID, 'pnnext'))
                     )
                     driver.execute_script("arguments[0].scrollIntoView();", element)
                     element.click()
-                    
-                    # Add another random delay after clicking "Next"
                     await asyncio.sleep(random.uniform(1, 3))
-                    
-                    page_num += 1  # Increment page number
+                    page_num += 1
 
                 except Exception:
-                    print("No more pages to navigate.")
+                    self.log_signal.emit("No more pages to navigate.")
                     break
 
-            # Update the UI with the extracted links
-            self.links_result.setPlainText("\n".join(links))
-
         except Exception as e:
-            print(f"An error occurred: {e}")
+            self.log_signal.emit(f"An error occurred: {e}")
             driver.save_screenshot("error_screenshot.png")
             QMessageBox.critical(self, "Error", f"An error occurred: {e}")
-        
+
         finally:
             driver.quit()  # Close the browser after finishing
 
-    def save_links_to_file(self):
-        """Save extracted links to a file with a custom name"""
-        links = self.links_result.toPlainText()
-        if not links:
-            QMessageBox.warning(self, "No Links", "There are no links to save.")
-            return
 
-        # Ask the user for the filename using an input dialog
-        file_name, ok = QInputDialog.getText(self, "Input Dialog", "Enter the filename to save (e.g., myfile.txt):")
+    # def save_links_to_file(self):
+    #     """Save extracted links to a file with a custom name"""
+    #     links = self.links_result.toPlainText()
+    #     if not links:
+    #         QMessageBox.warning(self, "No Links", "There are no links to save.")
+    #         return
+
+    #     # Ask the user for the filename using an input dialog
+    #     file_name, ok = QInputDialog.getText(self, "Input Dialog", "Enter the filename to save (e.g., myfile.txt):")
         
-        if ok and file_name:  # Check if the user clicked OK and provided a filename
-            file_name = file_name.strip()  # Strip any whitespace
-            if not file_name.endswith('.txt'):  # Ensure the file has a .txt extension
-                file_name += '.txt'
-            try:
-                with open(file_name, "w") as file:
-                    file.write(links)
-                QMessageBox.information(self, "Success", "Links saved successfully!")
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"An error occurred while saving the file: {e}")
+    #     if ok and file_name:  # Check if the user clicked OK and provided a filename
+    #         file_name = file_name.strip()  # Strip any whitespace
+    #         if not file_name.endswith('.txt'):  # Ensure the file has a .txt extension
+    #             file_name += '.txt'
+    #         try:
+    #             with open(file_name, "w") as file:
+    #                 file.write(links)
+    #             QMessageBox.information(self, "Success", "Links saved successfully!")
+    #         except Exception as e:
+    #             QMessageBox.critical(self, "Error", f"An error occurred while saving the file: {e}")
     # ==================end link extract======================
     # =====================start  email extract =======================
     def start_email_extraction(self):
@@ -283,12 +296,14 @@ class EmailAutomationApp(QMainWindow):
         
         if filename:
             self.thread = QThread()
+            self.extractor = EmailAutomationApp()  # Create an instance of EmailExtractor
+            self.extractor.log_signal.connect(self.update_email_results)
             self.thread.started.connect(lambda: self.extract_emails_from_urls(filename))  # Start extraction
             self.thread.finished.connect(self.thread.deleteLater)  # Clean up thread
             self.thread.start()
         else:
             QMessageBox.warning(self, "Input Error", "Please enter a filename containing URLs.")
- 
+
     def extract_emails_from_urls(self, filename):
         """Function to extract emails from the specified URLs file"""
         global extracted_emails  # Use the global variable to hold extracted emails
@@ -298,47 +313,60 @@ class EmailAutomationApp(QMainWindow):
                 urls = list(set(file.read().splitlines()))
             logger_info.info(f"{len(urls)} unique URLs found.")
             
+            # Ask for the filename to save emails at the beginning
+            save_file_name, ok = QInputDialog.getText(self, "Input Dialog", "Enter the filename to save emails (e.g., emails.txt):")
+            if not ok or not save_file_name.strip():
+                QMessageBox.warning(self, "Input Error", "Please enter a valid filename.")
+                return
+            
+            save_file_name = save_file_name.strip()
+            if not save_file_name.endswith('.txt'):
+                save_file_name += '.txt'
+
             with requests.Session() as session:
                 url_cache = {}
                 url_chunks = [urls[i::2] for i in range(2)]
-                with ThreadPoolExecutor(max_workers=2) as executor:
-                    executor.map(lambda chunk: process_urls(chunk, session, url_cache), url_chunks)
+                with open(save_file_name, "a") as email_file:
+                    for chunk in url_chunks:
+                        self.process_urls_with_signal(chunk, session, url_cache, email_file)
 
-            # پس از اتمام استخراج، به روز رسانی UI
-            self.update_email_results(extracted_emails)  # Update the UI with extracted emails
             logger_info.info(f"Extracted Emails: {extracted_emails}")
 
         except Exception as e:
-            raise BaseException(f"Error is :{e}")
+            logger_info.error(f"Error is :{e}")
 
-    def update_email_results(self, emails):
-        """Update the email display area with the extracted emails."""
-        if emails:
-            self.emails_result.setPlainText("\n".join(emails))  # Update QTextEdit with extracted emails
+    def process_urls_with_signal(self, chunk, session, url_cache, email_file):
+        """Process URLs and emit extracted emails."""
+        emails = process_urls(chunk, session, url_cache)  # Assuming process_urls returns the emails found
+        for email in emails:
+            self.extractor.log_signal.emit(email)  # Emit each extracted email
+            with self.lock:  # Acquire the lock before writing to the file
+                email_file.write(email + "\n")  # Write email to file immediately
+                logger_info.info(f"Saved email: {email}")  # Log the saved email
+        extracted_emails.extend(emails)
+
+    def update_email_results(self, email):
+        """Update the email display area with the extracted email."""
+        if email:
+            self.emails_result.append(email)  # Append the new email to the QTextEdit
         else:
-            self.emails_result.setPlainText("No emails found.")  # Inform if no emails found
+            self.emails_result.setPlainText("No emails found.") 
 
-    def save_email_to_file(self):
-        
-        """Save extracted emails to a file with a custom name"""
-        emails = self.emails_result.toPlainText()
-        print("Emails to save:", emails)
-        if not emails:
-            QMessageBox.warning(self, "No Emails", "There are no emails to save.")
-            return
-        # Debugging: Print the emails to the console
-        file_name, ok = QInputDialog.getText(self, "Input Dialog", "Enter the filename to save (e.g., myfile.txt):")
-        
-        if ok and file_name:
-            file_name = file_name.strip()
-            if not file_name.endswith('.txt'):
-                file_name += '.txt'
+    def save_email_to_file(self, email):
+        """Append extracted email to a file."""
+        file_name = "extracted_emails.txt"
+        with self.lock:  # Ensure only one thread can write to the file at a time
             try:
-                with open(file_name, "w") as file:
-                    file.write(emails)
-                QMessageBox.information(self, "Success", "Emails saved successfully!")
+                with open(file_name, "a") as file:
+                    file.write(email + "\n")
+                self.log_signal.emit(f"Email saved to file: {email}")
             except Exception as e:
-                QMessageBox.critical(self, "Error", f"An error occurred while saving the file: {e}")
+                self.log_signal.emit(f"Error saving email to file: {e}")
+
+
+
+
+
     # ===========================end  extract email ==================
     # ======================== start email sending======================
 
@@ -373,9 +401,9 @@ class EmailAutomationApp(QMainWindow):
             email_list = await read_email_list(email_file)
             for receiver_email in email_list:
                 await self.send_email_with_retry(receiver_email, sender_email, password, attachment_path)
-                await asyncio.sleep(10)  # Delay of 10 seconds between each email to avoid rate limits
+                await asyncio.sleep(7)  # Delay of 10 seconds between each email to avoid rate limits
                 
-            self.log_output.append("Emails sent successfully!")
+            self.log_signal.emit("Emails sent successfully!")
             QMessageBox.information(self, "Success", "Emails sent successfully!")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"An error occurred while sending emails: {e}")
@@ -407,7 +435,6 @@ if __name__ == "__main__":
     logger_info = logging.getLogger('info')
     logger_info.info("This is an info message.")
     app = QApplication(sys.argv)
-    # print(f"Saving to: {SAVE_FILE_PATH}")  #
     window = EmailAutomationApp()
     window.show()
     sys.exit(app.exec())

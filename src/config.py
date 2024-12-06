@@ -21,7 +21,8 @@ EXCLUDE_LINKS_START = [
     "https://github.com/",
     "https://www.quora.com",
     "https://www.linkedin.com",
-    "https://www.pinterest.com/"
+    "https://www.pinterest.com/",
+    "https://jobera.com"
 ]
 
 CHROMEDRIVER_PATH = "./chromedriver"
