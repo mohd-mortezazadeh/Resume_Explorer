@@ -29,11 +29,13 @@ from threading import Lock
 
 
 class EmailAutomationApp(QMainWindow):
-    log_signal = pyqtSignal(str)  
+    log_signal = pyqtSignal(str) 
+    link_signal = pyqtSignal(str) 
     def __init__(self):
         super().__init__()
         self.lock = Lock()
         self.log_signal.connect(self.update_log_output)  # اتصال سیگنال به متد
+        self.link_signal.connect(self.update_links_output)
         self.setWindowTitle("Email Automation Tool")
         self.setGeometry(100, 100, 800, 600)
 
@@ -45,11 +47,14 @@ class EmailAutomationApp(QMainWindow):
         self.create_link_extractor_tab()
         self.create_email_extractor_tab()  # New tab for extracting emails from URLs
         self.create_email_sender_tab()
+    # =======================end tab===============================
     #============================signals=======================
     def update_log_output(self, message):
         self.log_output.append(message)  # به روز رسانی لاگ در ترد اصلی
+
+    def update_links_output(self, link):
+        self.links_result.append(link)
     # ==========================================================
-    # =======================end tab===============================
     # ================== start tab ==================
     def create_link_extractor_tab(self):
         """Tab for extracting links from search results"""
@@ -184,9 +189,6 @@ class EmailAutomationApp(QMainWindow):
         self.tabs.addTab(tab, "Email Sender")
     # ======================== end tab =======================
     # =========================start link extract =====================
-
-
-
     def start_link_extraction(self):
         """Start the link extraction process in a separate thread"""
         search_query = self.search_input.text()
@@ -237,12 +239,13 @@ class EmailAutomationApp(QMainWindow):
                 current_links = process_links(driver)
                 valid_links = await validate_links(current_links)
                 links.update(valid_links)
+                for link in valid_links:
+                    self.link_signal.emit(f"Found links: {link}")  # Emit found links
 
                 with open(file_name, "a") as file:
                     for link in valid_links:
                         file.write(link + "\n")
 
-                self.log_signal.emit(f"Found links: {valid_links}")  # Emit found links
 
                 await asyncio.sleep(random.uniform(1, 3))
 
